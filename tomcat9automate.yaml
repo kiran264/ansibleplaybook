@@ -1,0 +1,58 @@
+---
+- hosts: group4
+  tasks:
+  - name: installing JDK 1.8
+    yum:
+     name: java-1.8.0-openjdk-devel
+     state: present
+
+  - name: to download the apache from internet
+    get_url:
+     url: https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.37/bin/apache-tomcat-9.0.37.tar.gz
+     dest: /usr/local/
+
+   - name: to un-tar the file and copy to a destination
+    unarchive:
+      src: /usr/local/apache-tomcat-9.0.37.tar.gz
+      dest: /usr/local/
+      remote_src: yes
+
+  - name: deleting tar file
+    file:
+     path: /usr/local/apache-tomcat-9.0.37.tar.gz
+     state: absent
+
+  - name: delete if tomcat9 is already present
+    file:
+     path: /usr/local/tomcat9
+     state: absent
+
+  - name: moving file using command
+    command: mv /usr/local/apache-tomcat-9.0.37 /usr/local/tomcat9
+
+  - name: adding path in .bashrc
+    lineinfile:
+     dest: /root/.bashrc
+     line: export CATALINA_HOME=/usr/local/tomcat9
+
+  - name: sourcing .bashrc
+    shell: source /root/.bashrc
+
+  - name: starting tomcat service
+    shell: nohup /usr/local/tomcat9/bin/startup.sh
+
+  - name: copying tomcat.xml
+    copy:
+     src: /tmp/tomcat-users.xml
+     dest: /usr/local/tomcat9/conf/tomcat-users.xml
+
+  - name: copying context.xml
+    copy:
+      src: /tmp/context.xml
+      dest: /usr/local/tomcat9/webapps/manager/META-INF/context.xml
+
+  - name: shutdown tomcat
+    shell: nohup /usr/local/tomcat9/bin/shutdown.sh
+
+  - name: starting tomcat service
+    shell: nohup /usr/local/tomcat9/bin/startup.sh
